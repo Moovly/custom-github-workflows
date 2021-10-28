@@ -24,7 +24,7 @@ on:
 
 permissions:
   id-token: write
-  content: write
+  contents: write
 
 jobs:
   deploy-staging:
