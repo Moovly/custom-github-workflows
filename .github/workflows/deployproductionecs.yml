@@ -32,7 +32,7 @@ jobs:
           ref: ${{ github.sha }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           allowed-conclusions: success
-          check-name: build
+          check-name: build / build-php
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@master
         with:
