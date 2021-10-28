@@ -8,7 +8,6 @@ on:
         type: string
       type:
         description: 'Type'
-        required: true
         default: 'service'
         type: string
       repository:
