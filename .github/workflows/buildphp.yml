@@ -21,6 +21,7 @@ permissions:
 jobs:
   build-php:
     runs-on: ubuntu-latest
+    steps:
     - uses: actions/checkout@v2
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
