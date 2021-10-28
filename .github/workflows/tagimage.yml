@@ -1,0 +1,41 @@
+name: 'Tag :sha ecr image as :branch'
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: 'ECR Repository'
+        required: true
+        type: string
+    secrets:
+      aws-role:
+        required: true
+      sentry-auth-token:
+        required: true
+
+permissions:
+  id-token: write
+
+jobs:
+  tag-image-as-branch:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@master
+      with:
+        aws-region: eu-west-1
+        role-to-assume: ${{ secrets.aws-role }}
+        role-duration-seconds: 3600
+        role-session-name: CI
+    - run: echo "BRANCH=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: Pull, tag and push to Amazon ECR
+      run: |
+        MANIFEST=$(aws ecr batch-get-image --repository-name ${{ inputs.repository }} --image-ids imageTag=$GITHUB_SHA --query 'images[].imageManifest' --output text)
+        aws ecr put-image --repository-name ${{ inputs.repository }} --image-tag ${BRANCH//\//-} --image-manifest "$MANIFEST"
+    - name: Sentry finalize release
+      uses: juankaram/sentry@master
+      env:
+        SENTRY_ORG: moovly
+        SENTRY_PROJECT: ${{ inputs.repository }}
+        SENTRY_AUTH_TOKEN: ${{ secrets.sentry-auth-token }}
+      with:
+        args: releases finalize ${{ github.sha }}

@@ -1,0 +1,70 @@
+name: 'Build docker image with composer install'
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: 'ECR Repository'
+        required: true
+        type: string
+    secrets:
+      aws-role:
+        required: true
+      packagist-key:
+        required: true
+      sentry-auth-token:
+        required: true
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build-php:
+    runs-on: ubuntu-latest
+    - uses: actions/checkout@v2
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.0'
+        tools: composer:v2
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: eu-west-1
+        role-to-assume: ${{ secrets.aws-role }}
+        role-duration-seconds: 3600
+        role-session-name: CI
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Get Composer Cache Directory
+      id: composer-cache
+      run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+    - name: Cache dependencies
+      uses: actions/cache@v1
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+    - run: composer config --auth http-basic.repo.packagist.com token ${PACKAGIST_KEY}
+      env:
+        PACKAGIST_KEY: ${{ secrets.packagist-key }}
+    - run: composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
+    - run: sed -i "s@%%RELEASE%%@${GITHUB_SHA}@" config/packages/prod/sentry.yaml
+    - name: Create Sentry release
+      uses: getsentry/action-release@v1
+      env:
+        SENTRY_ORG: moovly
+        SENTRY_PROJECT: ${{ inputs.repository }}
+        SENTRY_AUTH_TOKEN: ${{ secrets.aws-role }}
+      with:
+        environment: prod
+        finalize: false
+    - name: Build, tag and push to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        docker build -t $ECR_REGISTRY/${{ inputs.repository }}:$GITHUB_SHA .
+        docker push $ECR_REGISTRY/${{ inputs.repository }}:$GITHUB_SHA
+

@@ -1,0 +1,61 @@
+name: 'Deploy to staging'
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: 'ECR Repository'
+        required: true
+        type: string
+      with-create-database:
+        description: 'Runs doctrine d:d:c'
+        required: false
+        type: boolean
+        default: true
+      with-schema-update:
+        description: 'Runs doctrine d:s:u'
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      aws-role:
+        required: true
+      staging-domain:
+        required: true
+
+permissions:
+  id-token: write
+  content: write
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@master
+      with:
+        aws-region: eu-west-1
+        role-to-assume: ${{ secrets.aws-role }}
+        role-duration-seconds: 3600
+        role-session-name: CI
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - run: echo "BRANCH=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - run: echo "STACK_NAME=${{ inputs.repository }}-${BRANCH//\//-}" >> $GITHUB_ENV
+    - run: echo "STACK_NAME=${STACK_NAME:0:50}" >> $GITHUB_ENV
+    - run: echo "STACK_NAME=${STACK_NAME,,}" >> $GITHUB_ENV
+    - run: echo "STACK_HOST=${STACK_NAME}.${{ secrets.staging-domain }}" >> $GITHUB_ENV
+    - run: echo "IMAGE=$ECR_REGISTRY/${{ inputs.repository }}:$GITHUB_SHA" >> $GITHUB_ENV
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    - name: Deploy to ecs
+      run: |
+        envsubst < ecs-staging-task-definition.json > ecs-staging-task-definition_withenv.json
+        aws ecs register-task-definition --cli-input-json file://ecs-staging-task-definition_withenv.json
+        aws ecs update-service --cluster ${ECS_CLUSTER} --service ${STACK_NAME} --task-definition ${STACK_NAME} --desired-count 1 || \
+        aws ecs create-service --cluster ${ECS_CLUSTER} --service-name ${STACK_NAME} --task-definition ${STACK_NAME} --desired-count 1 --tags key=branch,value=${BRANCH}
+        ${{ inputs.with-create-database }} && aws ecs run-task --cluster ${ECS_CLUSTER} --task-definition ${STACK_NAME} --overrides "containerOverrides=[{name=nginx,command=[php,bin/console,d:d:c,--if-not-exists]}]" --query 'tasks[0].taskArn' | xargs aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks
+        ${{ inputs.with-schema-update }} && aws ecs run-task --cluster ${ECS_CLUSTER} --task-definition ${STACK_NAME} --overrides "containerOverrides=[{name=nginx,command=[php,bin/console,d:s:u,-f]}]" --query 'tasks[0].taskArn' | xargs aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks
+      env:
+        ECS_CLUSTER: staging-application
