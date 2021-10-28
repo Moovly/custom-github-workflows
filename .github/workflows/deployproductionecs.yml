@@ -46,7 +46,7 @@ jobs:
       - name: Download task definition
         shell: bash
         run: |
-          aws ecs describe-task-definition --task-definition $NAME-$TYPE --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition --task-definition $INPUT_NAME-$INPUT_TYPE --query taskDefinition > task-definition.json
           echo "::set-output name=revision::$(cat task-definition.json | jq .revision)"
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
@@ -60,8 +60,8 @@ jobs:
         env:
           ECR_REPOSITORY: ${{ inputs.repository }}
         run: |
-          MANIFEST=$(aws ecr batch-get-image --repository-name $ECR_REPOSITORY --image-ids imageTag=$GITHUB_SHA --query 'images[].imageManifest' --output text)
-          aws ecr put-image --repository-name $ECR_REPOSITORY --image-tag live --image-manifest "$MANIFEST"
+          MANIFEST=$(aws ecr batch-get-image --repository-name $INPUT_REPOSITORY --image-ids imageTag=$GITHUB_SHA --query 'images[].imageManifest' --output text)
+          aws ecr put-image --repository-name $INPUT_REPOSITORY --image-tag live --image-manifest "$MANIFEST"
       - name: Create appspec.json
         shell: bash
         run: |
