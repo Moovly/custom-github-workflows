@@ -23,70 +23,71 @@ on:
 permissions:
   id-token: write
 
-runs:
-  using: "composite"
-  steps:
-    - name: Wait on CI
-      uses: lewagon/wait-on-check-action@master
-      with:
-        ref: ${{ github.sha }}
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        allowed-conclusions: success
-        check-name: build
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-region: eu-west-1
-        role-to-assume: ${{ secrets.aws-role }}
-        role-duration-seconds: 3600
-        role-session-name: DeployProduction
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Download task definition
-      shell: bash
-      run: |
-        aws ecs describe-task-definition --task-definition $NAME-$TYPE --query taskDefinition > task-definition.json
-        echo "::set-output name=revision::$(cat task-definition.json | jq .revision)"
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: ${{ inputs.name }}-${{ inputs.type }}
-        image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ github.sha }}
-    - name: Tag as live
-      shell: bash
-      env:
-        ECR_REPOSITORY: ${{ inputs.repository }}
-      run: |
-        MANIFEST=$(aws ecr batch-get-image --repository-name $ECR_REPOSITORY --image-ids imageTag=$GITHUB_SHA --query 'images[].imageManifest' --output text)
-        aws ecr put-image --repository-name $ECR_REPOSITORY --image-tag live --image-manifest "$MANIFEST"
-    - name: Create appspec.json
-      shell: bash
-      run: |
-        echo "{\"version\": 0.0,\"Resources\": [{\"TargetService\":{\"Type\":\"AWS::ECS::Service\",\"Properties\":{\"TaskDefinition\":\"$TASK_DEF\",\"LoadBalancerInfo\":{\"ContainerName\":\"$CONTAINER_NAME\",\"ContainerPort\":80}}}}]}" > appspec.json
-      env:
-        TASK_DEF: ${{ steps.task-def.outputs.task-definition}}
-        CONTAINER_NAME: ${{ inputs.name }}-${{ inputs.type }}
-    - uses: actions/upload-artifact@v2
-      with:
-        name: appspec
-        path: appspec.json
-    - run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      shell: bash
-    - run: echo "$TAG - $GITHUB_SHA By $GITHUB_ACTOR"
-      shell: bash
-    - name: Deploy Amazon ECS task definition
-      id: deploy
-      uses: Moovly/amazon-ecs-deploy-task-definition@master
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ inputs.name }}-${{ inputs.type }}
-        cluster: production-application
-        codedeploy-appspec: appspec.json
-        codedeploy-application: prod-app-${{ inputs.name }}
-        codedeploy-deployment-group: prod-app-${{ inputs.name }}
-        codedeploy-deployment-description: "${{ env.TAG }} - ${{ github.sha }} By ${{ github.actor }}"
-        wait-for-service-stability: true
+jobs:
+  deploy-release-to-production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait on CI
+        uses: lewagon/wait-on-check-action@master
+        with:
+          ref: ${{ github.sha }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          allowed-conclusions: success
+          check-name: build
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: eu-west-1
+          role-to-assume: ${{ secrets.aws-role }}
+          role-duration-seconds: 3600
+          role-session-name: DeployProduction
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Download task definition
+        shell: bash
+        run: |
+          aws ecs describe-task-definition --task-definition $NAME-$TYPE --query taskDefinition > task-definition.json
+          echo "::set-output name=revision::$(cat task-definition.json | jq .revision)"
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ inputs.name }}-${{ inputs.type }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ github.sha }}
+      - name: Tag as live
+        shell: bash
+        env:
+          ECR_REPOSITORY: ${{ inputs.repository }}
+        run: |
+          MANIFEST=$(aws ecr batch-get-image --repository-name $ECR_REPOSITORY --image-ids imageTag=$GITHUB_SHA --query 'images[].imageManifest' --output text)
+          aws ecr put-image --repository-name $ECR_REPOSITORY --image-tag live --image-manifest "$MANIFEST"
+      - name: Create appspec.json
+        shell: bash
+        run: |
+          echo "{\"version\": 0.0,\"Resources\": [{\"TargetService\":{\"Type\":\"AWS::ECS::Service\",\"Properties\":{\"TaskDefinition\":\"$TASK_DEF\",\"LoadBalancerInfo\":{\"ContainerName\":\"$CONTAINER_NAME\",\"ContainerPort\":80}}}}]}" > appspec.json
+        env:
+          TASK_DEF: ${{ steps.task-def.outputs.task-definition}}
+          CONTAINER_NAME: ${{ inputs.name }}-${{ inputs.type }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: appspec
+          path: appspec.json
+      - run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        shell: bash
+      - run: echo "$TAG - $GITHUB_SHA By $GITHUB_ACTOR"
+        shell: bash
+      - name: Deploy Amazon ECS task definition
+        id: deploy
+        uses: Moovly/amazon-ecs-deploy-task-definition@master
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ inputs.name }}-${{ inputs.type }}
+          cluster: production-application
+          codedeploy-appspec: appspec.json
+          codedeploy-application: prod-app-${{ inputs.name }}
+          codedeploy-deployment-group: prod-app-${{ inputs.name }}
+          codedeploy-deployment-description: "${{ env.TAG }} - ${{ github.sha }} By ${{ github.actor }}"
+          wait-for-service-stability: true
 
