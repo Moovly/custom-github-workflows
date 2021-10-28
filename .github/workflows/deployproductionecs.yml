@@ -17,7 +17,6 @@ on:
     secrets:
       aws-role:
         required: true
-        type: string
 
 permissions:
   id-token: write
