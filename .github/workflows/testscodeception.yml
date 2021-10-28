@@ -27,7 +27,7 @@ jobs:
         php-version: '8.0'
         tools: composer:v2
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@master
       with:
         aws-region: eu-west-1
         role-to-assume: ${{ secrets.aws-role }}
