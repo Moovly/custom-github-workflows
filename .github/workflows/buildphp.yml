@@ -57,7 +57,7 @@ jobs:
       env:
         SENTRY_ORG: moovly
         SENTRY_PROJECT: ${{ inputs.repository }}
-        SENTRY_AUTH_TOKEN: ${{ secrets.aws-role }}
+        SENTRY_AUTH_TOKEN: ${{ secrets.sentry-auth-token }}
       with:
         environment: prod
         finalize: false
