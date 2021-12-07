@@ -6,6 +6,11 @@ on:
         description: 'ECR Repository'
         required: true
         type: string
+      custom-name:
+        description: 'Custom stack name'
+        required: false
+        type: string
+        default: ""
       with-create-database:
         description: 'Runs doctrine d:d:c'
         required: false
@@ -41,7 +46,9 @@ jobs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-    - run: echo "BRANCH=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - run: echo "REF=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - run: echo "NAME=${{ inputs.custom-name }}" >> $GITHUB_ENV
+    - run: echo "BRANCH=${NAME:-$REF}" >> $GITHUB_ENV
     - run: echo "STACK_NAME=${{ inputs.repository }}-${BRANCH//\//-}" >> $GITHUB_ENV
     - run: echo "STACK_NAME=${STACK_NAME:0:50}" >> $GITHUB_ENV
     - run: echo "STACK_NAME=${STACK_NAME,,}" >> $GITHUB_ENV
