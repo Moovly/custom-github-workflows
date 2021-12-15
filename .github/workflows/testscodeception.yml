@@ -6,6 +6,11 @@ on:
         description: 'Database name'
         required: true
         type: string
+      with-fixtures-staging:
+        description: 'Runs fixtures:staging -f'
+        required: false
+        type: boolean
+        default: false
     secrets:
       aws-role:
         required: true
@@ -69,6 +74,7 @@ jobs:
         docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console d:s:u -f --env=cli
         docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
         docker-compose --f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept build
+        ${{ inputs.with-fixtures-staging }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console fixtures-staging -f --env=dev || true
     - name: Run tests
       run: |
         docker-compose --f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept run --xml result.xml
