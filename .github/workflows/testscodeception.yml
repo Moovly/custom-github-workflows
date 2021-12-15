@@ -53,6 +53,8 @@ jobs:
         echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> .env.ci
         echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> .env.ci
         echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> .env.ci
+    - name: Download Translations
+      run: curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es}.json" -o "translations/messages.#1.json"
     - name: Install dependencies
       run: |
         sed -i "s@{%DATABASE_NAME%}@${{ inputs.database-name }}-${GITHUB_REF#refs/*/}@" .env.ci
