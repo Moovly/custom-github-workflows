@@ -6,6 +6,11 @@ on:
         description: 'Database name'
         required: true
         type: string
+      with-doctrine-fixtures:
+        description: 'Runs d:f:l'
+        required: false
+        type: boolean
+        default: false
       with-fixtures-staging:
         description: 'Runs fixtures:staging -f'
         required: false
@@ -80,6 +85,7 @@ jobs:
         docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
         docker-compose --f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept build
         ${{ inputs.with-fixtures-staging }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console fixtures-staging -f --env=dev || true
+        ${{ inputs.with-doctrine-fixtures }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console d:f:l --env=dev || true
     - name: Run tests
       run: |
         docker-compose --f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept run --xml result.xml
