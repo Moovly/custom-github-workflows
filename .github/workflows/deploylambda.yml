@@ -54,6 +54,11 @@ jobs:
       with:
         environment: prod
         finalize: false
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+    - run: npm install
+    - run: npm install -g serverless
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@master
       with:
@@ -61,8 +66,4 @@ jobs:
         role-to-assume: ${{ secrets.aws-role }}
         role-duration-seconds: 3600
         role-session-name: CI
-    - name: Deploy Lambda
-      run: |
-        aws cloudformation package --template-file template.yaml --output-template-file .stack.yaml --s3-bucket builds.moovly.com --s3-prefix lambda/${{ inputs.repository }}
-        aws cloudformation deploy --template-file .stack.yaml --stack-name ProdAppGenerator
-
+    - run: serverless deploy --stage prod
