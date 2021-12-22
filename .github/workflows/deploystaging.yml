@@ -60,6 +60,7 @@ jobs:
     - run: echo "BRANCH=${BRANCH//\//-}" >> $GITHUB_ENV
     - run: echo "STACK_NAME=${{ inputs.repository }}" >> $GITHUB_ENV
     - run: ${{ inputs.with-branch-name }} && echo "STACK_NAME=$STACK_NAME-$BRANCH" >> $GITHUB_ENV || true
+    - run: ${{ inputs.with-branch-name }} || echo "EXTRA_TAGS=key=skip-delete,value=true" >> $GITHUB_ENV
     - run: echo "STACK_NAME=${STACK_NAME:0:50}" >> $GITHUB_ENV
     - run: echo "STACK_NAME=${STACK_NAME,,}" >> $GITHUB_ENV
     - run: echo "STACK_HOST=${STACK_NAME}.${{ secrets.staging-domain }}" >> $GITHUB_ENV
@@ -71,7 +72,7 @@ jobs:
         envsubst < ecs-staging-task-definition.json > ecs-staging-task-definition_withenv.json
         aws ecs register-task-definition --cli-input-json file://ecs-staging-task-definition_withenv.json
         aws ecs update-service --cluster ${ECS_CLUSTER} --service ${STACK_NAME} --task-definition ${STACK_NAME} --desired-count 1 || \
-        aws ecs create-service --cluster ${ECS_CLUSTER} --service-name ${STACK_NAME} --task-definition ${STACK_NAME} --desired-count 1 --tags key=branch,value=${BRANCH}
+        aws ecs create-service --cluster ${ECS_CLUSTER} --service-name ${STACK_NAME} --task-definition ${STACK_NAME} --desired-count 1 --tags key=branch,value=${BRANCH} ${EXTRA_TAGS}
         ${{ inputs.with-create-database }} && aws ecs run-task --cluster ${ECS_CLUSTER} --task-definition ${STACK_NAME} --overrides "containerOverrides=[{name=nginx,command=[php,bin/console,d:d:c,--if-not-exists]}]" --query 'tasks[0].taskArn' | xargs aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks || true
         ${{ inputs.with-schema-update }} && aws ecs run-task --cluster ${ECS_CLUSTER} --task-definition ${STACK_NAME} --overrides "containerOverrides=[{name=nginx,command=[php,bin/console,d:s:u,-f]}]" --query 'tasks[0].taskArn' | xargs aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks || true
         ${{ inputs.with-fixtures-staging }} && aws ecs run-task --cluster ${ECS_CLUSTER} --task-definition ${STACK_NAME} --overrides "containerOverrides=[{name=nginx,command=[php,bin/console,fixtures:staging,-f]}]" --query 'tasks[0].taskArn' | xargs aws ecs wait tasks-stopped --cluster ${ECS_CLUSTER} --tasks || true
