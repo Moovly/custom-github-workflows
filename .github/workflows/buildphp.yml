@@ -56,7 +56,7 @@ jobs:
       env:
         PACKAGIST_KEY: ${{ secrets.packagist-key }}
     - run: composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
-    - run: sed -i "s@%%RELEASE%%@${GITHUB_SHA}@" config/packages/prod/sentry.yaml
+    - run: sed -i "s@%%RELEASE%%@${GITHUB_SHA}@" config/packages/prod/sentry.yaml || true
     - name: Create Sentry release
       uses: getsentry/action-release@v1
       env:
