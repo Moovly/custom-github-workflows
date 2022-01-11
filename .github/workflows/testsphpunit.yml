@@ -70,9 +70,11 @@ jobs:
         echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> .env.ci
     - name: Download Translations
       run: test -d "translations" && curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es}.json" -o "translations/messages.#1.json" || true
+    - run: echo "DATABASE_NAME=${{ inputs.database-name }}-${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - run: echo "DATABASE_NAME=${DATABASE_NAME:0:60}" >> $GITHUB_ENV
     - name: Install dependencies
       run: |
-        sed -i "s@{%DATABASE_NAME%}@${{ inputs.database-name }}-${GITHUB_REF#refs/*/}@" .env.ci
+        sed -i "s@{%DATABASE_NAME%}@${DATABASE_NAME}@" .env.ci
         mkdir -p var/log
         export $(grep -v '^#' .env.ci | xargs)
         composer install --ignore-platform-reqs
