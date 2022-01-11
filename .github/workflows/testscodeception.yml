@@ -71,7 +71,7 @@ jobs:
     - name: Download Translations
       run: test -d "translations" && curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es}.json" -o "translations/messages.#1.json" || true
     - run: echo "DATABASE_NAME=${{ inputs.database-name }}-${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - run: echo "DATABASE_NAME=${DATABASE_NAME:0:60}" >> $GITHUB_ENV
+    - run: echo "DATABASE_NAME=${DATABASE_NAME:0:55}" >> $GITHUB_ENV
     - name: Install dependencies
       run: |
         sed -i "s@{%DATABASE_NAME%}@${DATABASE_NAME}@" .env.ci
