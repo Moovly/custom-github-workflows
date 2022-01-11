@@ -85,7 +85,7 @@ jobs:
         docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console d:d:c --if-not-exists --connection ${{ inputs.doctrine-connection-name }}
         docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console d:s:u -f --env=cli
         docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
-        ${{ inputs.with-fixtures-staging }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console fixtures-staging -f --env=dev || true
+        ${{ inputs.with-fixtures-staging }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console fixtures:staging -f --env=dev || true
     - name: Run tests
       run: |
         docker-compose --f docker-compose-ci.yml run --rm nginx ./vendor/bin/phpunit
