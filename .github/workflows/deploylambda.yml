@@ -66,4 +66,4 @@ jobs:
         role-to-assume: ${{ secrets.aws-role }}
         role-duration-seconds: 3600
         role-session-name: CI
-    - run: serverless deploy --stage prod
+    - run: serverless deploy --stage prod --verbose
