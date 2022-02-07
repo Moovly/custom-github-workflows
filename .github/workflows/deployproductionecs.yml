@@ -61,7 +61,7 @@ jobs:
           ECR_REPOSITORY: ${{ inputs.repository }}
         run: |
           MANIFEST=$(aws ecr batch-get-image --repository-name ${{ inputs.repository }} --image-ids imageTag=$GITHUB_SHA --query 'images[].imageManifest' --output text)
-          aws ecr put-image --repository-name ${{ inputs.repository }} --image-tag live --image-manifest "$MANIFEST"
+          aws ecr put-image --repository-name ${{ inputs.repository }} --image-tag live --image-manifest "$MANIFEST" || true
       - name: Create appspec.json
         shell: bash
         run: |
