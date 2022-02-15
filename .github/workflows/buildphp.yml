@@ -58,7 +58,7 @@ jobs:
     - run: composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
     - run: sed -i "s@%%RELEASE%%@${GITHUB_SHA}@" config/packages/prod/sentry.yaml || true
     - name: Download translations
-      run: test -d "translations" && curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es,de,pt}.json" -o "translations/messages.#1.json" || true
+      run: test -d "translations" && curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es,de,pt,it}.json" -o "translations/messages.#1.json" || true
     - name: Create Sentry release
       uses: getsentry/action-release@v1
       env:
