@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: '8.1'
+      stage:
+        description: 'Serverless stage'
+        required: false
+        type: string
+        default: 'prod'
     secrets:
       aws-role:
         required: true
@@ -67,4 +72,4 @@ jobs:
         role-to-assume: ${{ secrets.aws-role }}
         role-duration-seconds: 3600
         role-session-name: CI
-    - run: serverless deploy --stage prod --verbose
+    - run: serverless deploy --stage ${{ inputs.stage }}--verbose
