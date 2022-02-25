@@ -18,6 +18,7 @@ permissions:
 jobs:
   tag-image-as-branch:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@master
