@@ -90,6 +90,10 @@ jobs:
     - name: Run tests
       run: |
         docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest --runner=WrapperRunner tests/Flows
+    - name: docker logs
+      if: failure()
+      run: |
+        docker-compose --f docker-compose-ci.yml logs
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
