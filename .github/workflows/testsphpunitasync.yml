@@ -83,10 +83,10 @@ jobs:
         docker-compose --f docker-compose-ci.yml up -d
         docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
         ${{ inputs.with-fixtures-staging }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console fixtures:staging -f --env=dev || true
-    - name: Sleep for 100s
+    - name: Sleep for 10s
       uses: juliangruber/sleep-action@v1
       with:
-        time: 100s
+        time: 10s
     - name: Run tests
       run: |
         docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest --runner=WrapperRunner tests/Flows
