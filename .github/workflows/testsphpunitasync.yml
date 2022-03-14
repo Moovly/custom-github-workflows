@@ -89,7 +89,7 @@ jobs:
         time: 10s
     - name: Run tests
       run: |
-        docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest --runner=WrapperRunner tests/Flows
+        docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest -f tests/Flows
     - name: docker logs
       if: failure()
       run: |
