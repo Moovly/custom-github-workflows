@@ -69,6 +69,8 @@ jobs:
         echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> .env.ci
         echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> .env.ci
         echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> .env.ci
+    - name: Set Testing Key permissions
+      run: chmod 600 var/www/oauth.private.testing.pem
     - name: Download Translations
       run: test -d "translations" && curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es}.json" -o "translations/messages.#1.json" || true
     - name: Install dependencies
