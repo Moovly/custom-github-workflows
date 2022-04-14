@@ -21,6 +21,12 @@ on:
         required: false
         type: string
         default: 'default'
+      parallel-proceses:
+        description: 'Amount of parallel processes'
+        required: false
+        type: number
+        default: 5
+
     secrets:
       aws-role:
         required: true
@@ -91,7 +97,7 @@ jobs:
         time: 10s
     - name: Run tests
       run: |
-        docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest -f tests
+        docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest -f -p ${{ inputs.parallel-proceses }}
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
