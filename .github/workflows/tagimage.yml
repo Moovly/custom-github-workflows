@@ -33,6 +33,7 @@ jobs:
         MANIFEST=$(aws ecr batch-get-image --repository-name ${{ inputs.repository }} --image-ids imageTag=$GITHUB_SHA --query 'images[].imageManifest' --output text)
         aws ecr put-image --repository-name ${{ inputs.repository }} --image-tag ${BRANCH//\//-} --image-manifest "$MANIFEST"
     - name: Sentry finalize release
+      continue-on-error: true
       uses: juankaram/sentry@master
       env:
         SENTRY_ORG: moovly
