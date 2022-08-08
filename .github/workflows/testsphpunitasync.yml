@@ -21,6 +21,12 @@ on:
         required: false
         type: string
         default: 'default'
+      parallel-proceses:
+        description: 'Amount of parallel processes'
+        required: false
+        type: number
+        default: 5
+
     secrets:
       aws-role:
         required: true
@@ -69,6 +75,8 @@ jobs:
         echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> .env.ci
         echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> .env.ci
         echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> .env.ci
+    - name: Set Testing Key permissions
+      run: chmod 600 oauth.private.testing.pem
     - name: Download Translations
       run: test -d "translations" && curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es}.json" -o "translations/messages.#1.json" || true
     - name: Install dependencies
@@ -89,7 +97,7 @@ jobs:
         time: 10s
     - name: Run tests
       run: |
-        docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest -f tests
+        docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest -f -p ${{ inputs.parallel-proceses }}
     - uses: actions/upload-artifact@v1
       if: failure()
       with:

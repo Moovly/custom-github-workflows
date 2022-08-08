@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: '8.1'
+      with-composer-scripts:
+        description: 'Omits --no-scripts'
+        required: false
+        type: boolean
+        default: false
     secrets:
       aws-role:
         required: true
@@ -56,11 +61,15 @@ jobs:
     - run: composer config --auth http-basic.repo.packagist.com token ${PACKAGIST_KEY}
       env:
         PACKAGIST_KEY: ${{ secrets.packagist-key }}
-    - run: composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
+    - run: |
+        ${{ inputs.with-composer-scripts }} && \
+        composer install --no-dev --optimize-autoloader || \
+        composer install --no-dev --optimize-autoloader --no-scripts
     - run: sed -i "s@%%RELEASE%%@${GITHUB_SHA}@" config/packages/prod/sentry.yaml || true
     - name: Download translations
       run: test -d "translations" && curl "https://assets.moovly.com/i18n/backend/{en,nl,fr,es,de,pt,it}.json" -o "translations/messages.#1.json" || true
     - name: Create Sentry release
+      continue-on-error: true
       uses: getsentry/action-release@v1
       env:
         SENTRY_ORG: moovly
