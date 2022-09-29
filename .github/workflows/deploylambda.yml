@@ -63,7 +63,7 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '16.x'
-    - run: npm install
+    - run: test -f package.json && npm install
     - run: npm install -g serverless
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@master
