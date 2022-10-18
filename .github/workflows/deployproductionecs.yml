@@ -79,7 +79,7 @@ jobs:
         env:
           TASK_DEF: ${{ steps.task-def.outputs.task-definition}}
           CONTAINER_NAME: ${{ inputs.name }}-${{ inputs.type }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: appspec
           path: appspec.json
