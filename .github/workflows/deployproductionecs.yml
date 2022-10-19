@@ -48,7 +48,6 @@ jobs:
         shell: bash
         run: |
           aws ecs describe-task-definition --task-definition ${{ inputs.name }}-${{ inputs.type }} --query taskDefinition > task-definition.json
-          echo "::set-output name=revision::$(cat task-definition.json | jq .revision)"
           echo $(cat task-definition.json | jq 'del(
                   .taskDefinitionArn,
                   .requiresAttributes,
