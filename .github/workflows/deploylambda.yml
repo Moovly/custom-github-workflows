@@ -10,7 +10,7 @@ on:
         description: 'PHP Version'
         required: false
         type: string
-        default: '8.1'
+        default: '8.2'
       stage:
         description: 'Serverless stage'
         required: false

@@ -15,7 +15,7 @@ on:
         description: 'PHP Version'
         required: false
         type: string
-        default: '8.1'
+        default: '8.2'
       doctrine-connection-name:
         description: 'Doctrine Connection Name'
         required: false
