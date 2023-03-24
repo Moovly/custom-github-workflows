@@ -81,7 +81,7 @@ jobs:
         composer install --ignore-platform-reqs
     - name: Setup ci environment
       run: |
-        docker compose -f docker-compose-ci.yml build --pull --progress tty
+        docker compose -f docker-compose-ci.yml build --pull --progress plain
         docker compose -f docker-compose-ci.yml up -d || docker compose -f docker-compose-ci.yml logs
         docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console d:d:c --if-not-exists --connection ${{ inputs.doctrine-connection-name }}
         docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console d:s:u -f --env=cli
