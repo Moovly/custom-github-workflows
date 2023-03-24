@@ -81,17 +81,17 @@ jobs:
         composer install --ignore-platform-reqs
     - name: Setup ci environment
       run: |
-        docker-compose --f docker-compose-ci.yml build --pull
-        docker-compose --f docker-compose-ci.yml up -d
-        docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console d:d:c --if-not-exists
-        docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console d:s:u -f --env=cli
-        docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
-        docker-compose --f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept build
-        ${{ inputs.with-fixtures-staging }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console fixtures:staging -f --env=dev || true
-        ${{ inputs.with-doctrine-fixtures }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console d:f:l --env=dev || true
+        docker compose -f docker-compose-ci.yml build --pull
+        docker compose -f docker-compose-ci.yml up -d
+        docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console d:d:c --if-not-exists
+        docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console d:s:u -f --env=cli
+        docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
+        docker compose -f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept build
+        ${{ inputs.with-fixtures-staging }} && docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console fixtures:staging -f --env=dev || true
+        ${{ inputs.with-doctrine-fixtures }} && docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console d:f:l --env=dev || true
     - name: Run tests
       run: |
-        docker-compose --f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept run --xml result.xml
+        docker compose -f docker-compose-ci.yml run --rm nginx ./vendor/bin/codecept run --xml result.xml
     - uses: actions/upload-artifact@v3
       if: failure()
       with:
@@ -105,5 +105,5 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker-compose --f docker-compose-ci.yml stop
-        docker-compose --f docker-compose-ci.yml rm -f
+        docker compose -f docker-compose-ci.yml stop
+        docker compose -f docker-compose-ci.yml rm -f

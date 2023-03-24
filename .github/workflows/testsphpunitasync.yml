@@ -87,17 +87,17 @@ jobs:
         composer install --ignore-platform-reqs
     - name: Setup ci environment
       run: |
-        docker-compose --f docker-compose-ci.yml build --pull
-        docker-compose --f docker-compose-ci.yml up -d
-        docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
-        ${{ inputs.with-fixtures-staging }} && docker-compose --f docker-compose-ci.yml run --rm nginx ./bin/console fixtures:staging -f --env=dev || true
+        docker compose -f docker-compose-ci.yml build --pull
+        docker compose -f docker-compose-ci.yml up -d
+        docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console c:c --no-warmup --env=dev
+        ${{ inputs.with-fixtures-staging }} && docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console fixtures:staging -f --env=dev || true
     - name: Sleep for 10s
       uses: juliangruber/sleep-action@v1
       with:
         time: 10s
     - name: Run tests
       run: |
-        docker-compose --f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest -f -p ${{ inputs.parallel-proceses }}
+        docker compose -f docker-compose-ci.yml run --rm  nginx vendor/bin/paratest -f -p ${{ inputs.parallel-proceses }}
     - uses: actions/upload-artifact@v3
       if: failure()
       with:
@@ -106,5 +106,5 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker-compose --f docker-compose-ci.yml stop
-        docker-compose --f docker-compose-ci.yml rm -f
+        docker compose -f docker-compose-ci.yml stop
+        docker compose -f docker-compose-ci.yml rm -f
