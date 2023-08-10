@@ -89,7 +89,7 @@ jobs:
         ${{ inputs.with-fixtures-staging }} && docker compose -f docker-compose-ci.yml run --rm nginx ./bin/console fixtures:staging -f --env=dev || true
     - name: Run tests
       run: |
-        docker compose -f docker-compose-ci.yml run --rm nginx ./vendor/bin/phpunit
+        docker compose -f docker-compose-ci.yml run --rm nginx ./vendor/bin/phpunit tests
     - uses: actions/upload-artifact@v3
       if: failure()
       with:
