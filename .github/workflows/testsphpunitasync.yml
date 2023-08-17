@@ -58,6 +58,8 @@ jobs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
+      with:
+        mask-password: 'true'
     - name: Get Composer Cache Directory
       id: composer-cache
       run: echo "DIR=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
