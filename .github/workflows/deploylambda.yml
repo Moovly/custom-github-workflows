@@ -52,6 +52,7 @@ jobs:
     - name: Composer install
       run: |
         test -f .env.dist && export $(cat .env.dist | grep -v '^#') || true
+        APP_ENV=prod
         composer install --no-dev --optimize-autoloader --ignore-platform-reqs
     - run: sed -i "s@%%RELEASE%%@${GITHUB_SHA}@" config/packages/prod/sentry.yaml
     - name: Create Sentry release
