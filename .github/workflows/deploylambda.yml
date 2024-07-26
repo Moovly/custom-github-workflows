@@ -68,7 +68,7 @@ jobs:
       with:
         node-version: '18.x'
     - run: test -f package.json && npm install || true
-    - run: npm install -g serverless
+    - run: npm install -g serverless@3.38.0
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@master
       with:
