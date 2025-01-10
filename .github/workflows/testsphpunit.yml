@@ -92,7 +92,7 @@ jobs:
     - name: Run tests
       run: |
         docker compose -f docker-compose-ci.yml run --rm nginx ./vendor/bin/phpunit
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: logs
