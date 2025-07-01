@@ -64,7 +64,7 @@ jobs:
       with:
         node-version: '16.x'
     - run: npm install
-    - run: npm install -g serverless
+    - run: npm install -g serverless@3.40.0
     - run: npm install --save-dev serverless-localstack
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@master
