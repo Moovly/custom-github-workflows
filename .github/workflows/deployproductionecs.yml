@@ -46,19 +46,21 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         with:
           mask-password: 'true'
-      - name: Download task definition
+      - name: Download and update task definition
         shell: bash
         run: |
-          aws ecs describe-task-definition --task-definition ${{ inputs.name }}-${{ inputs.type }} --query taskDefinition > task-definition.json
-          echo $(cat task-definition.json | jq 'del(
-                  .taskDefinitionArn,
-                  .requiresAttributes,
-                  .compatibilities,
-                  .revision,
-                  .status,
-                  .registeredAt,
-                  .registeredBy
-              )') > task-definition.json
+          EXEC_ROLE="arn:aws:iam::939614502044:role/ECS_Run_Task"
+          aws ecs describe-task-definition --task-definition ${{ inputs.name }}-${{ inputs.type }} --query taskDefinition > raw-task-def.json
+
+          jq 'del(
+            .taskDefinitionArn,
+            .requiresAttributes,
+            .compatibilities,
+            .revision,
+            .status,
+            .registeredAt,
+            .registeredBy
+          ) | .executionRoleArn = env.EXEC_ROLE' raw-task-def.json > task-definition.json
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
